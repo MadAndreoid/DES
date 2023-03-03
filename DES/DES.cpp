@@ -31,7 +31,7 @@ using namespace std;
 /// <summary>
 /// Cast a string to bitset v0.1
 /// </summary>
-/// <typeparam name="n">The number of bits taht compose the bitset</typeparam>
+/// <typeparam name="n">The number of bits that compose the bitset</typeparam>
 /// <param name="str">(The string that u want to cast)</param>
 /// <returns> (Returns the string casted in a bitset)</returns>
 template <size_t n>
@@ -76,8 +76,7 @@ bitset<n> twice_left_shift(bitset<n> toshift)
     return left_shift(toshift);
 
 }
-template <size_t n>
-bitset<n>* generate_key(bitset<n> key)
+bitset<48>* generate_key(bitset<64> key)
 {
 #pragma region ]PERMUTATION CHOICE[
 
@@ -103,13 +102,15 @@ bitset<n>* generate_key(bitset<n> key)
 
 #pragma endregion
 
-    bitset<n / 2>leftKey;
+	bitset<48>keys[16];
+
+    bitset<24>leftKey;
     {
 
-        bitset<n / 2>rightKey;
+        bitset<24>rightKey;
         {
 
-            bitset<n>perm_key(0);
+            bitset<48>perm_key(0);
             {
 
                 for (int i = 0; i < 56; i++)
@@ -119,24 +120,38 @@ bitset<n>* generate_key(bitset<n> key)
 
 
 
-                for (int i = 0; i < n / 2; i++)
+                for (int i = 0; i < 24; i++)
                 {
                     rightKey[i] = perm_key[i];
-                }
-
-                for (int i = 0; i < n / 2; i++)
-                {
-                    leftKey[i] = perm_key[27 + i];
-                }
+					leftKey[i] = perm_key[27 + i];
+				}
             }
+
+			for (int i = 0; i < 16; i++)
+			{
+				switch (i)
+				{
+				case 0:
+				case 1:
+				case 8:
+				case 15:
+					leftKey = left_shift(leftKey);
+					rightKey = left_shift(leftKey);
+				default:
+					leftKey = twice_left_shift(leftKey);
+					rightKey = twice_left_shift(rightKey);
+					break;
+				}
+
+			}
 
         }
     }
-    return key;
+    return keys;
 }
 
 template<size_t n>
-bitset<n> Des()
+bitset<n> Des(bitset<64>*keys)
 {
 #pragma region ]TABLES[
 
@@ -242,7 +257,38 @@ bitset<n> Des()
 
 int main()
 {
-    bitset<64>* keys;
-    keys = generate_key(bitset<64>(1));
+	string strKey;
+	string strPt;
+    
+	while (true)
+	{
+		cout << "Insert Plain Text:(8char)" << endl;
+		cin >> strPt;
+
+		if (strPt.length() > 8)
+		{
+			cout << "Too many char" << endl;
+			continue;
+		}
+		break;
+	}
+
+	while (true)
+	{
+		cout << "Insert Key(8char):" << endl;
+		cin >> strKey;
+
+		if (strKey.length() > 8)
+		{
+			cout << "Too many char" << endl;
+			continue;
+		}
+		break;
+
+	}
+
+	int desLenght = strPt.length() * 8;
+	bitset<desLenght>Des();
+
     //
 }
