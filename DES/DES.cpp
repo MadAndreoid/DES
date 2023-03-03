@@ -6,7 +6,7 @@
 ██████╔╝███████╗███████║    ███████║██║██║ ╚═╝ ██║╚██████╔╝███████╗██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║
 ╚═════╝ ╚══════╝╚══════╝    ╚══════╝╚═╝╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
 
-    By Andrea Marinacci
+	By Andrea Marinacci
 
 */
 
@@ -17,6 +17,9 @@
 #include <cstdlib>
 #include <stdlib.h>
 #include <math.h>
+#include <vector>
+#include <list>
+#include <list>
 
 #pragma endregion
 
@@ -37,50 +40,51 @@ using namespace std;
 template <size_t n>
 bitset<n> string_to_Bitset(string str)
 {
-    string sr;
+	string sr;
 
-    for (int i = 0; i < str.length(); i++)
-    {
-        bitset<8> c(str[i]);
-        sr += c.to_string();
-    }
+	for (int i = 0; i < str.length(); i++)
+	{
+		bitset<8> c(str[i]);
+		sr += c.to_string();
+	}
 
-    bitset<n> result(sr);
+	bitset<n> result(sr);
 
-    return result;
+	return result;
 }
 
 template <size_t n>
 bitset<n> bitset_Xor(bitset<n> bits1, bitset<n> bits2)
 {
-    return bitset<n>(bits1 ^= bits2);
+	return bitset<n>(bits1 ^= bits2);
 }
 
 template <size_t n>
 bitset<n> left_shift(bitset<n> toshift)
 {
-    bitset<1> first(toshift[0]);
+	bitset<1> first(toshift[0]);
 
-    bitset<n> result(toshift << 1);
+	bitset<n> result(toshift << 1);
 
-    result[n - 1] = first[0];
+	result[n - 1] = first[0];
 
-    return result;
+	return result;
 }
 
 template <size_t n>
 bitset<n> twice_left_shift(bitset<n> toshift)
 {
-    toshift = left_shift(toshift);
+	toshift = left_shift(toshift);
 
-    return left_shift(toshift);
+	return left_shift(toshift);
 
 }
+
 bitset<48>* generate_key(bitset<64> key)
 {
 #pragma region ]PERMUTATION CHOICE[
 
-    int pc1[56] = {
+	int pc1[56] = {
 57,	49,	41,	33,	25,	17,	9,
 1,	58,	50,	42,	34,	26,	18,
 10,	2,	59,	51,	43,	35, 27,
@@ -90,7 +94,7 @@ bitset<48>* generate_key(bitset<64> key)
 14,	6,	61,	53,	45,	37,	29,
 21,	13,	5,	28,	20,	12,	4 };
 
-    int pc2[48] = {
+	int pc2[48] = {
 14,	17,	11,	24,	1,	5,
 3,	28,	15,	6,	21,	10,
 23,	19,	12,	4,	26,	8,
@@ -104,28 +108,28 @@ bitset<48>* generate_key(bitset<64> key)
 
 	bitset<48>keys[16];
 
-    bitset<24>leftKey;
-    {
+	bitset<28>leftKey;
+	{
 
-        bitset<24>rightKey;
-        {
+		bitset<28>rightKey;
+		{
 
-            bitset<48>perm_key(0);
-            {
+			bitset<56>perm_key(0);
+			{
 
-                for (int i = 0; i < 56; i++)
-                {
-                    perm_key[i] = key[pc1[i] - 1];
-                }
-
-
-
-                for (int i = 0; i < 24; i++)
-                {
-                    rightKey[i] = perm_key[i];
-					leftKey[i] = perm_key[27 + i];
+				for (int i = 0; i < 56; i++)
+				{
+					perm_key[i] = key[pc1[i] - 1];
 				}
-            }
+
+
+
+				for (int i = 0; i < 28; i++)
+				{
+					rightKey[i] = perm_key[i];
+					leftKey[i] = perm_key[28 + i];
+				}
+			}
 
 			for (int i = 0; i < 16; i++)
 			{
@@ -135,23 +139,35 @@ bitset<48>* generate_key(bitset<64> key)
 				case 1:
 				case 8:
 				case 15:
-					leftKey = left_shift(leftKey);
-					rightKey = left_shift(leftKey);
+					leftKey = left_shift<28>(leftKey);
+					rightKey = left_shift<28>(leftKey);
+					break;
 				default:
-					leftKey = twice_left_shift(leftKey);
-					rightKey = twice_left_shift(rightKey);
+					leftKey = twice_left_shift<28>(leftKey);
+					rightKey = twice_left_shift<28>(rightKey);
 					break;
 				}
 
+				bitset<56> combinedKey = bitset<56>(leftKey.to_string() + rightKey.to_string());
+
+				bitset<48>perm_Key2;
+
+				for (int j = 0; j < 48; j++)
+				{
+					perm_Key2[j] = combinedKey[pc2[j] - 1];
+				}
+
+				keys[i] = perm_Key2;
 			}
 
-        }
-    }
-    return keys;
+
+		}
+	}
+	return keys;
 }
 
 template<size_t n>
-bitset<n> Des(bitset<64>*keys)
+bitset<n> Des(bitset<64>* keys)
 {
 #pragma region ]TABLES[
 
@@ -259,12 +275,14 @@ int main()
 {
 	string strKey;
 	string strPt;
-    
+
 	while (true)
 	{
+		//Inserisci il testo in chiaro
 		cout << "Insert Plain Text:(8char)" << endl;
 		cin >> strPt;
 
+		//Controllo se è maggiore di 8 caratteri
 		if (strPt.length() > 8)
 		{
 			cout << "Too many char" << endl;
@@ -273,6 +291,7 @@ int main()
 		break;
 	}
 
+	//Stesso principio di sopra ma con la chiave
 	while (true)
 	{
 		cout << "Insert Key(8char):" << endl;
@@ -287,8 +306,9 @@ int main()
 
 	}
 
-	int desLenght = strPt.length() * 8;
-	bitset<desLenght>Des();
+	bitset<48>* keys = generate_key(string_to_Bitset<64>(strKey));
 
-    //
+	list<string>textDivided;
+
+	textDivided.insert("hi");
 }
