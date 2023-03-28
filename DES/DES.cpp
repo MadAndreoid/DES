@@ -276,20 +276,10 @@ int main()
 	string strKey;
 	string strPt;
 
-	while (true)
-	{
-		//Inserisci il testo in chiaro
-		cout << "Insert Plain Text:(8char)" << endl;
+	//Inserisci il testo in chiaro
+		cout << "Insert Plain Text:" << endl;
 		cin >> strPt;
 
-		//Controllo se è maggiore di 8 caratteri
-		if (strPt.length() > 8)
-		{
-			cout << "Too many char" << endl;
-			continue;
-		}
-		break;
-	}
 
 	//Stesso principio di sopra ma con la chiave
 	while (true)
@@ -310,5 +300,20 @@ int main()
 
 	list<string>textDivided;
 
-	textDivided.insert("hi");
+	while (strPt.length() > 0)
+	{
+		string temp;
+		for (int i = 0; i < 8; i++)
+		{
+			string temp = temp + strPt[i];
+		}
+
+	}
+
+
+	textDivided.insert(textDivided.begin(), "hi");
+	for (string z : textDivided)
+	{
+
+	}
 }
