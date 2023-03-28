@@ -31,12 +31,6 @@ using namespace std;
 
 #pragma region ]FUNCTIONES[
 
-/// <summary>
-/// Cast a string to bitset v0.1
-/// </summary>
-/// <typeparam name="n">The number of bits that compose the bitset</typeparam>
-/// <param name="str">(The string that u want to cast)</param>
-/// <returns> (Returns the string casted in a bitset)</returns>
 template <size_t n>
 bitset<n> string_to_Bitset(string str)
 {
@@ -166,8 +160,7 @@ bitset<48>* generate_key(bitset<64> key)
 	return keys;
 }
 
-template<size_t n>
-bitset<n> Des(bitset<64>* keys)
+bitset<64> Des(bitset<48>* keys,bitset<64>plainText)
 {
 #pragma region ]TABLES[
 
@@ -263,8 +256,79 @@ bitset<n> Des(bitset<64>* keys)
 
 #pragma endregion
 
+	bitset<64>perm;
+	for (int i = 0; i < 64; i++)
+	{
+		perm[i] = plainText[initial_permutation[i] - 1];
+	}
+	bitset<32>left;
+	bitset<32>right;
 
-	return;
+	for (int i = 0; i < 32; i++)
+	{
+		left[i] = perm[i];
+		right[i] = perm[32 + i];
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		bitset<48>right_expanded;
+		for (int j = 0; j < 48; j++)
+		{
+			right_expanded[j] = right[expansion_table[j] - 1];
+		}
+		bitset<48>xored = bitset_Xor<48>(keys[i], right_expanded);
+		bitset<32>res;
+
+
+		for (int j = 0; j < 8; j++) 
+		{
+			bitset<2>rowB;
+			bitset<4>colB;
+			rowB[0] = xored[j * 6];
+			rowB[1] = xored[j * 6 + 5];
+
+			colB[0] = xored[j * 6 + 1];
+			colB[1] = xored[j * 6 + 2];
+			colB[2] = xored[j * 6 + 3];
+			colB[3] = xored[j * 6 + 4];
+
+			bitset<4>val(substition_boxes[j][rowB.to_ulong()][colB.to_ulong()]);
+
+			for (int k = 0; k < 4; k++)
+			{
+				res[(j * 4) + k] = val[k];
+			}
+		}
+		bitset<32>perm2;
+		for (int j = 0; j < 32; j++)
+		{
+			perm2[j] = res[permutation_tab[j] - 1];
+		}
+		bitset<32>xored2 = bitset_Xor<32>(perm2, left);
+		left = xored2;
+		if (i < 15)
+		{
+			bitset<32>t = right;
+			right = xored2;
+			left = t;
+		}
+	}
+	bitset<64> combtext;
+	for (int i = 0; i < 32; i++)
+	{
+		combtext[i] = left[i];
+		combtext[i + 32] = right[i];
+	}
+
+	bitset<64>ciphertext;
+
+	for (int i = 0; i < 64; i++)
+	{
+		ciphertext[i] = combtext[inverse_permutation[i] - 1];
+	}
+	
+	return ciphertext;
 }
 
 #pragma endregion
@@ -276,12 +340,9 @@ int main()
 	string strKey;
 	string strPt;
 
-	//Inserisci il testo in chiaro
-		cout << "Insert Plain Text:" << endl;
-		cin >> strPt;
+	cout << "Insert Plain Text:" << endl;
+	cin >> strPt;
 
-
-	//Stesso principio di sopra ma con la chiave
 	while (true)
 	{
 		cout << "Insert Key(8char):" << endl;
@@ -297,23 +358,30 @@ int main()
 	}
 
 	bitset<48>* keys = generate_key(string_to_Bitset<64>(strKey));
-
+	string t;
 	list<string>textDivided;
+	list<bitset<64>>ptToBitset;
 
-	while (strPt.length() > 0)
+
+	for (int i = 0; i < strPt.length(); i++)
 	{
-		string temp;
-		for (int i = 0; i < 8; i++)
+		t += strPt[i];
+		if ((i + 1) % 8 == 0)
 		{
-			string temp = temp + strPt[i];
+			textDivided.push_back(t);
+			t.clear();
 		}
+	}
+	textDivided.push_back(t);
 
+	for (string x : textDivided)
+	{
+		ptToBitset.push_back(string_to_Bitset<64>(x));
 	}
 
-
-	textDivided.insert(textDivided.begin(), "hi");
-	for (string z : textDivided)
+	for (bitset<64>x : ptToBitset)
 	{
-
+		cout<<Des(keys, x)<<endl;
 	}
 }
+
